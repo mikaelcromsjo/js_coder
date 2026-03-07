@@ -1,1 +1,57 @@
+# Environment variables
 .env
+.env.*
+!.env.example
+
+# Node / JavaScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+.pnp.*
+.yarn/
+
+# Build output
+dist/
+build/
+output/
+.next/
+.nuxt/
+.svelte-kit/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# Database
+*.sqlite3
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Secrets & keys
+*.pem
+*.key
+secrets/
+credentials.json
