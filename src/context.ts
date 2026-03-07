@@ -27,19 +27,19 @@ export function get_string_full_context_for_llm_injection(): string {
     .map(([k, v]) => `  ${k}: ${v}`)
     .join("\n");
 
-  const string_context = `
-=== AGEF CONTEXT ===
-provider=${string_active_llm_provider} | app=${string_current_app_name} | revision=${int_current_revision_number}
-output=${string_current_js_output_file_path}
-test_passed=${bool_last_test_passed} | heal=${int_current_heal_attempt_number}/${int_max_heal_attempts}
-test_error=${string_last_test_error_message || "none"}
-test_stdout=${string_last_test_stdout.slice(0, 150) || "none"}
-prompts_sent=${int_total_prompts} | responses=${list_string_all_llm_responses_received.length}
-description=${string_current_app_description}
-agents:
-${string_agent_models}
-last_code_tail=${string_last_generated_js_code.slice(-400) || "none"}
-=== END CONTEXT ===`.trim();
+  const string_context = [
+    `=== AGEF CONTEXT ===`,
+    `provider=${string_active_llm_provider} | app=${string_current_app_name} | rev=${int_current_revision_number}`,
+    `output=${string_current_js_output_file_path}`,
+    `test_passed=${bool_last_test_passed} | heal=${int_current_heal_attempt_number}/${int_max_heal_attempts}`,
+    string_last_test_error_message   && `error=${string_last_test_error_message}`,
+    string_last_test_stdout          && `stdout=${string_last_test_stdout.slice(0, 150)}`,
+    `prompts_sent=${int_total_prompts} | responses=${int_total_responses}`,
+    `description=${string_current_app_description}`,
+    `agents:\n${string_agent_models}`,
+    string_last_generated_js_code    && `last_code_tail=${string_last_generated_js_code.slice(-400)}`,
+    `=== END CONTEXT ===`,
+  ].filter(Boolean).join("\n");
 
   exit_fn_debug_log_for_string_function_name("get_string_full_context_for_llm_injection", {
     int_context_chars: string_context.length,

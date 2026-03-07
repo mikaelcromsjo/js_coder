@@ -12,6 +12,8 @@
  *   level 3 → full code injected (maximum context)
  * ─────────────────────────────────────────────────────────────────────────────
  */
+import { load_list_dict_active_functions_from_store } from "../storage/functionStore";
+import { string_current_app_name }                    from "../state";
 import {
   get_list_string_target_function_names_from_string_instruction,
   get_string_target_function_resolution_prompt_for_string_instruction,
@@ -92,18 +94,27 @@ export async function get_string_optimized_context_for_string_instruction_and_st
     );
   }
 
-  // ── Strategy C: LLM resolution last resort ─────────────────────────────────
+// ── Strategy C: LLM resolution last resort ─────────────────────────────────
   if (list_string_targets.length === 0) {
+    const dict_string_fn_name_to_string_body: Record<string, string> = {};
+    for (const dict_fn of load_list_dict_active_functions_from_store(string_current_app_name)) {
+      dict_string_fn_name_to_string_body[dict_fn.string_name] = dict_fn.string_body;
+    }
+
     const string_resolution_prompt =
       get_string_target_function_resolution_prompt_for_string_instruction(
-        string_instruction, list_string_all_fns
+        string_instruction,
+        list_string_all_fns,
+        dict_string_fn_name_to_string_body
       );
+
     const string_llm_reply = await call_string_llm_for_string_agent_with_string_model(
       "context_resolver",
       dict_string_agent_name_to_string_model_name["critic"],
       "Identify which functions from the list are referenced. Reply ONLY with comma-separated exact names.",
       string_resolution_prompt
     );
+
     list_string_targets = parse_list_string_function_names_from_string_llm_reply(
       string_llm_reply, list_string_all_fns
     );

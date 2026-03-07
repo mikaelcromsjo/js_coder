@@ -45,7 +45,7 @@ export async function get_list_float_embedding_for_string_text(
     const openai_client = create_embedding_openai_client();
     const response = await openai_client.embeddings.create({
       model: string_embedding_model,
-      input: string_text.slice(0, 100),  // guard token limit
+      input: string_text.slice(0, 8000),  // guard token limit
     });
     const list_float_vector = response.data[0]?.embedding ?? [];
     exit_fn_debug_log_for_string_function_name("get_list_float_embedding_for_string_text", {

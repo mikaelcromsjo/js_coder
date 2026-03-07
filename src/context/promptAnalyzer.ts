@@ -58,15 +58,30 @@ export function get_list_string_target_function_names_from_string_instruction(
 
 export function get_string_target_function_resolution_prompt_for_string_instruction(
   string_instruction:             string,
-  list_string_all_function_names: string[]
+  list_string_all_function_names: string[],
+  dict_string_fn_name_to_string_body: Record<string, string> = {}
 ): string {
   init_fn_debug_log_for_string_function_name(
-    "get_string_target_function_resolution_prompt_for_string_instruction"
+    "get_string_target_function_resolution_prompt_for_string_instruction",
+    { int_functions: list_string_all_function_names.length }
   );
-  const string_prompt = `Given this user instruction: "${string_instruction}"
-And these available functions: ${list_string_all_function_names.join(", ")}
-Which function name(s) from the list are being referenced or should be changed?
+
+  // Build compact signature list: name + first line of body (enough for semantic match)
+  const list_string_fn_summaries = list_string_all_function_names.map((string_fn_name) => {
+    const string_body        = dict_string_fn_name_to_string_body[string_fn_name] ?? "";
+    const string_first_line  = string_body.split("\n")[0]?.trim() ?? "";
+    return `  ${string_fn_name}: ${string_first_line}`;
+  });
+
+  const string_prompt =
+`USER INSTRUCTION: "${string_instruction}"
+
+AVAILABLE FUNCTIONS:
+${list_string_fn_summaries.join("\n")}
+
+Which function name(s) from the list above are referenced or need to change to satisfy the instruction?
 Reply ONLY with a comma-separated list of exact function names from the list. Nothing else.`;
+
   exit_fn_debug_log_for_string_function_name(
     "get_string_target_function_resolution_prompt_for_string_instruction",
     { int_prompt_chars: string_prompt.length }

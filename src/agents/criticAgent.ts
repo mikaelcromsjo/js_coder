@@ -19,12 +19,19 @@ export async function run_string_critic_agent_on_string_js_code(
 
   const string_system_prompt = `You are a senior code reviewer.
 Reply EXACTLY "PASS" if code is correct and satisfies the spec.
-Otherwise reply a numbered list of specific problems only. No preamble.
+Otherwise reply a numbered list of specific problems only. No preamble. No praise.
+
+AUTHORITY ORDER (highest to lowest):
+1. RULES — always enforced
+2. FORMAL SPEC — defines what must exist and what must be output
+3. PLAN — defines intended structure; flag deviations unless spec overrides
 
 ORIGINAL REQUIREMENT: ${string_original_requirement}
 FORMAL SPEC:
 ${string_formal_spec || "(no spec yet)"}
 ${string_prompt_all_conventions}
+PLAN:
+
 ${string_context}`;
 
   const string_user_prompt = `Review this JavaScript code:\n${string_js_code}`;
@@ -34,7 +41,7 @@ ${string_context}`;
   );
 
   exit_fn_debug_log_for_string_function_name("run_string_critic_agent_on_string_js_code", {
-    string_verdict: string_result.slice(0, 4000),
+    string_verdict: string_result.slice(0, 40),
   });
   return string_result;
 }

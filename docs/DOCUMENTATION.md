@@ -41,6 +41,15 @@ npm run build
 $env:PATH += ";$(pwd)\bin"   # adds bin to PATH for current session only
 ```
 
+## Logging
+
+All prompts and answers are stored in db
+
+Brows using datasette:
+
+pip install datasette
+python -m datasette agef.db
+
 ## Architecture
 
 ```

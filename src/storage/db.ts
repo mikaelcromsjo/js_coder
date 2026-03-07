@@ -19,6 +19,25 @@ export function initialise_all_sqlite_database_tables(): void {
       string_context_snapshot TEXT,
       string_timestamp        TEXT
     );
+    CREATE TABLE IF NOT EXISTS function_store (
+      string_app_name   TEXT,
+      string_name       TEXT,
+      string_body       TEXT,
+      string_type       TEXT DEFAULT 'function',
+      bool_obsolete     INTEGER DEFAULT 0,
+      int_revision      INTEGER,
+      string_timestamp  TEXT,
+      PRIMARY KEY (string_app_name, string_name)
+    );
+    CREATE TABLE IF NOT EXISTS function_embeddings (
+      string_app_name         TEXT,
+      int_revision            INTEGER,
+      string_function_name    TEXT,
+      string_embedding_json   TEXT,
+      string_fn_body          TEXT,
+      string_timestamp        TEXT,
+      PRIMARY KEY (string_app_name, int_revision, string_function_name)
+    );
     CREATE TABLE IF NOT EXISTS prompts (
       int_id                  INTEGER PRIMARY KEY AUTOINCREMENT,
       string_agent_name       TEXT,
@@ -42,15 +61,6 @@ export function initialise_all_sqlite_database_tables(): void {
       string_reason           TEXT,
       string_timestamp        TEXT
     );
-    CREATE TABLE IF NOT EXISTS function_embeddings (
-      string_app_name         TEXT,
-      int_revision            INTEGER,
-      string_function_name    TEXT,
-      string_embedding_json   TEXT,
-      string_fn_body          TEXT,
-      string_timestamp        TEXT,
-      PRIMARY KEY (string_app_name, int_revision, string_function_name)
-    );
     CREATE TABLE IF NOT EXISTS accumulated_tests (
       int_id                  INTEGER PRIMARY KEY AUTOINCREMENT,
       string_app_name         TEXT,
@@ -59,5 +69,5 @@ export function initialise_all_sqlite_database_tables(): void {
       string_timestamp        TEXT
     );
   `);
-  exit_fn_debug_log_for_string_function_name("initialise_all_sqlite_database_tables", { string_status: "ok" });
+  exit_fn_debug_log_for_string_function_name("initialise_all_sqlite_database_tables");
 }

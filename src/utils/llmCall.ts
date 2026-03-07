@@ -54,7 +54,7 @@ export async function call_string_llm_for_string_agent_with_string_model(
 
     exit_fn_debug_log_for_string_function_name("call_string_llm_for_string_agent_with_string_model", {
       int_response_chars: string_llm_response.length,
-      string_preview:     string_llm_response.slice(0, 6000),
+      string_preview:     string_llm_response.slice(0, 60),
     });
     return string_llm_response;
 

@@ -11,13 +11,14 @@ import {
 } from "../state";
 import { run_string_refactor_agent_on_string_js_code_and_string_critique } from "../agents/refactorAgent";
 import { run_bool_test_on_string_test_file_path }                          from "../tester/runTest";
-import { write_string_js_code_to_disk_at_global_output_path }              from "../utils/fileWriter";
 import { save_revision_to_sqlite_for_int_revision_number }                 from "../storage/saveRevision";
 import { save_refactor_log_to_sqlite_from_int_revision_to_int_revision }   from "../storage/saveRefactorLog";
 import {
   init_fn_debug_log_for_string_function_name,
   exit_fn_debug_log_for_string_function_name,
 } from "../debug/debugLogger";
+import { apply_string_llm_output_and_rebuild_app_for_string_app_name } from "../assembly/applyLLMOutput";
+import path from "path";
 
 export async function trigger_self_heal_loop_on_string_js_code_and_string_test_path(
   string_js_code:      string,
@@ -43,8 +44,15 @@ export async function trigger_self_heal_loop_on_string_js_code_and_string_test_p
     );
 
     set_string_last_generated_js_code(string_current_code);
-    write_string_js_code_to_disk_at_global_output_path(string_current_code);
+    const string_output_dir = path.dirname(string_test_path);
+
     increment_int_current_revision_number();
+
+    const dict_heal = await apply_string_llm_output_and_rebuild_app_for_string_app_name(
+      string_current_code, string_current_app_name, int_attempt, string_output_dir
+    );
+    string_current_code = dict_heal.string_app_js;
+
 
     save_revision_to_sqlite_for_int_revision_number(
       int_current_revision_number, string_current_app_name,

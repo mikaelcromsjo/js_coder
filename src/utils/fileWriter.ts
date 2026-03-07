@@ -7,7 +7,7 @@ import {
   error_fn_debug_log_for_string_function_name,
 } from "../debug/debugLogger";
 
-function strip_markdown_code_fence(string_code: string): string {
+export function strip_markdown_code_fence(string_code: string): string {
   return string_code
     .replace(/^```[a-z]*\n?/i, '')  // remove opening fence
     .replace(/\n?```$/,        '')  // remove closing fence

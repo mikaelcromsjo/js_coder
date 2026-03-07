@@ -11,7 +11,7 @@ import {
   clear_dict_session_from_file,
 } from "./storage/sessionStore";
 import { load_string_js_code_from_sqlite_by_int_revision, get_list_dict_revision_history_for_string_app_name } from "./storage/saveRevision";
-import { write_string_js_code_to_disk_at_global_output_path }                          from "./utils/fileWriter";
+import { apply_string_llm_output_and_rebuild_app_for_string_app_name } from "./assembly/applyLLMOutput";
 import {
   set_string_current_app_name,
   set_string_current_js_output_file_path,
@@ -92,7 +92,10 @@ export async function run_cli_from_process_argv(): Promise<void> {
       const string_output_path = path.resolve(process.env.OUTPUT_DIR ?? "./output", dict_session.string_app_name, "app.js");
       set_string_current_app_name(dict_session.string_app_name);
       set_string_current_js_output_file_path(string_output_path);
-      write_string_js_code_to_disk_at_global_output_path(string_code);
+      const string_rollback_output_dir = path.resolve(process.env.OUTPUT_DIR ?? "./output", dict_session.string_app_name);
+      await apply_string_llm_output_and_rebuild_app_for_string_app_name(
+        string_code, dict_session.string_app_name, int_rollback_to, string_rollback_output_dir
+      );
       console.log(chalk.green(`\n✅ Rolled back to revision ${int_rollback_to}`));
       return;
     }
