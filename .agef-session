@@ -1,0 +1,6 @@
+{
+  "string_app_name": "create-a-javascript",
+  "string_original_requirement": "Create a JavaScript command prompt game similar to tetris, use characters to display the board, use input w up. a left, d right, s dropp, update slow in start 1 row in 5 sec, then slowly faster.",
+  "string_formal_spec": "FUNCTIONS:\nget_string_board() - returns the current game board as a string\nget_bool_game_over() - returns whether the game is over\nget_int_score() - returns the current score\nget_int_speed() - returns the current game speed\nset_bool_game_over() - sets the game over flag\nupdate_board_for_string_input() - updates the board based on user input\nget_string_test_error() - returns a test error message\nrun_bool_game_loop() - runs the game loop\nsave_int_score_to_file() - saves the score to a file\n\nINPUTS:\nstring input from user (w, a, s, d)\n\nOUTPUTS:\nstring representation of the game board\nboolean indicating game over\ninteger score\ninteger game speed\n\nCONSTRAINTS:\ninitial game speed is 1 row per 5 seconds\ngame speed increases over time\ngame board is displayed using characters\nuser input is w (up), a (left), d (right), s (drop)",
+  "int_last_passing_revision": 3
+}
