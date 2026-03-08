@@ -23,6 +23,7 @@ export function get_string_full_context_for_llm_injection(): string {
   init_fn_debug_log_for_string_function_name("get_string_full_context_for_llm_injection");
 
   const int_total_prompts = list_string_all_prompts_sent.length;
+  const int_total_responses = list_string_all_llm_responses_received.length;
   const string_agent_models = Object.entries(dict_string_agent_name_to_string_model_name)
     .map(([k, v]) => `  ${k}: ${v}`)
     .join("\n");
