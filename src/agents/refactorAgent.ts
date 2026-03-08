@@ -55,13 +55,8 @@ ${string_prompt_all_conventions}
 
 ${string_context}`;
 
-  const string_user_prompt =
-`Current app code (all functions):
-${string_js_code}
-
-Instruction / issues:
-${string_critique_or_error}
-
+const string_user_prompt =
+`
 Return ONLY the new or changed function bodies. Nothing else.`;
 
   const string_result = await call_string_llm_for_string_agent_with_string_model(

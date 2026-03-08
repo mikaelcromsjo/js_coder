@@ -37,7 +37,7 @@ export function create_openai_client_for_string_provider_name(
   init_fn_debug_log_for_string_function_name("create_openai_client_for_string_provider_name", { string_provider });
   const string_base_url = dict_string_provider_to_string_base_url[string_provider];
   const string_api_key  = dict_string_provider_to_string_api_key[string_provider];
-  const openai_client   = new OpenAI({ apiKey: string_api_key, baseURL: string_base_url });
+  const openai_client   = new OpenAI({ apiKey: string_api_key, baseURL: string_base_url, logLevel: 'error', });
   exit_fn_debug_log_for_string_function_name("create_openai_client_for_string_provider_name", { string_base_url });
   return openai_client;
 }

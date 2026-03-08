@@ -11,20 +11,30 @@ import {
   exit_fn_debug_log_for_string_function_name,
 } from "../debug/debugLogger";
 
+function get_list_dict_deduplicated_by_string_name(
+  list_dict_items: { string_name: string; string_body: string }[]
+): { string_name: string; string_body: string }[] {
+  const dict_string_name_to_dict_item: Record<string, { string_name: string; string_body: string }> = {};
+  for (const dict_item of list_dict_items) {
+    dict_string_name_to_dict_item[dict_item.string_name] = dict_item;
+  }
+  return Object.values(dict_string_name_to_dict_item);
+}
+
 function get_list_string_safe_sorted_function_names(
-  list_string_all_names:                            string[],
-  dict_string_fn_name_to_list_string_calls:         Record<string, string[]>
+  list_string_all_names: string[],
+  dict_string_fn_name_to_list_string_calls: Record<string, string[]>
 ): string[] {
   init_fn_debug_log_for_string_function_name("get_list_string_safe_sorted_function_names", {
     int_total: list_string_all_names.length,
   });
 
-  const set_string_visited  = new Set<string>();
-  const list_string_sorted: string[] = [];
+  const list_string_visited: string[] = [];
+  const list_string_sorted:  string[] = [];
 
   function visit_string_fn_name(string_fn_name: string): void {
-    if (set_string_visited.has(string_fn_name)) return;
-    set_string_visited.add(string_fn_name);
+    if (list_string_visited.includes(string_fn_name)) return;
+    list_string_visited.push(string_fn_name);
     const list_string_deps = dict_string_fn_name_to_list_string_calls[string_fn_name] ?? [];
     for (const string_dep of list_string_deps) {
       if (list_string_all_names.includes(string_dep)) visit_string_fn_name(string_dep);
@@ -34,19 +44,52 @@ function get_list_string_safe_sorted_function_names(
 
   for (const string_fn_name of list_string_all_names) visit_string_fn_name(string_fn_name);
 
-  // ── CRITICAL: append any names the sort missed (parse failures etc.) ────────
   for (const string_fn_name of list_string_all_names) {
-    if (!set_string_visited.has(string_fn_name)) {
+    if (!list_string_visited.includes(string_fn_name)) {
       list_string_sorted.push(string_fn_name);
     }
   }
 
   exit_fn_debug_log_for_string_function_name("get_list_string_safe_sorted_function_names", {
-    int_sorted:  list_string_sorted.length,
-    int_total:   list_string_all_names.length,
+    int_sorted:        list_string_sorted.length,
+    int_total:         list_string_all_names.length,
     bool_all_included: list_string_sorted.length === list_string_all_names.length,
   });
   return list_string_sorted;
+}
+
+function get_list_string_sorted_global_bodies(
+  list_dict_globals: { string_name: string; string_body: string }[]
+): string[] {
+  const list_string_all_names = list_dict_globals.map((r) => r.string_name);
+
+  const dict_string_name_to_string_body: Record<string, string> = {};
+  for (const dict_global of list_dict_globals) {
+    dict_string_name_to_string_body[dict_global.string_name] = dict_global.string_body;
+  }
+
+  const dict_string_name_to_list_string_deps: Record<string, string[]> = {};
+  for (const dict_global of list_dict_globals) {
+    const list_string_deps: string[] = [];
+    for (const string_other_name of list_string_all_names) {
+      if (
+        string_other_name !== dict_global.string_name &&
+        dict_global.string_body.includes(string_other_name)
+      ) {
+        list_string_deps.push(string_other_name);
+      }
+    }
+    dict_string_name_to_list_string_deps[dict_global.string_name] = list_string_deps;
+  }
+
+  const list_string_sorted_names = get_list_string_safe_sorted_function_names(
+    list_string_all_names,
+    dict_string_name_to_list_string_deps
+  );
+
+  return list_string_sorted_names
+    .map((string_name) => dict_string_name_to_string_body[string_name])
+    .filter((string_body) => string_body !== undefined);
 }
 
 export function build_string_app_js_from_store_for_string_app_name(
@@ -56,30 +99,31 @@ export function build_string_app_js_from_store_for_string_app_name(
     string_app_name,
   });
 
-  const list_dict_active    = load_list_dict_active_functions_from_store(string_app_name);
-  const list_dict_globals   = list_dict_active.filter((r) => r.string_type === "global");
-  const list_dict_functions = list_dict_active.filter((r) => r.string_type === "function");
+  const list_dict_active = load_list_dict_active_functions_from_store(string_app_name);
 
-  // Log every function loaded — makes it trivial to spot missing ones in debug
+  const list_dict_globals = get_list_dict_deduplicated_by_string_name(
+    list_dict_active.filter((r) => r.string_type === "global")
+  );
+  const list_dict_functions = get_list_dict_deduplicated_by_string_name(
+    list_dict_active.filter((r) => r.string_type === "function")
+  );
+
   for (const dict_fn of list_dict_functions) {
     init_fn_debug_log_for_string_function_name("build_string_app_js_from_store_for_string_app_name:fn_loaded", {
-      string_name: dict_fn.string_name,
+      string_name:    dict_fn.string_name,
       int_body_chars: dict_fn.string_body.length,
-      bool_obsolete: dict_fn.bool_obsolete,
     });
   }
 
-  // Build body lookup
   const dict_string_fn_name_to_string_body: Record<string, string> = {};
   for (const dict_fn of list_dict_functions) {
     dict_string_fn_name_to_string_body[dict_fn.string_name] = dict_fn.string_body;
   }
 
-  // Build call-dep map — best effort, parse failures are tolerated
   const dict_string_fn_name_to_list_string_calls: Record<string, string[]> = {};
   for (const dict_fn of list_dict_functions) {
     try {
-      const dict_fn_map = get_dict_function_map_from_string_js_code(dict_fn.string_body);
+      const dict_fn_map  = get_dict_function_map_from_string_js_code(dict_fn.string_body);
       const dict_fn_info = dict_fn_map[dict_fn.string_name];
       dict_string_fn_name_to_list_string_calls[dict_fn.string_name] =
         dict_fn_info?.list_string_functions_called ?? [];
@@ -88,12 +132,12 @@ export function build_string_app_js_from_store_for_string_app_name(
     }
   }
 
-  const list_string_all_names = list_dict_functions.map((r) => r.string_name);
-  const list_string_sorted    = get_list_string_safe_sorted_function_names(
+  const list_string_all_names     = list_dict_functions.map((r) => r.string_name);
+  const list_string_sorted        = get_list_string_safe_sorted_function_names(
     list_string_all_names, dict_string_fn_name_to_list_string_calls
   );
+  const list_string_global_bodies = get_list_string_sorted_global_bodies(list_dict_globals);
 
-  // Assemble
   const list_string_parts: string[] = [
     "// AUTO-ASSEMBLED by AGEF — do not edit directly",
     `// Generated: ${new Date().toISOString()}`,
@@ -101,10 +145,10 @@ export function build_string_app_js_from_store_for_string_app_name(
     "",
   ];
 
-  if (list_dict_globals.length > 0) {
+  if (list_string_global_bodies.length > 0) {
     list_string_parts.push("// ── Globals ──────────────────────────────────────");
-    for (const dict_global of list_dict_globals) {
-      list_string_parts.push(dict_global.string_body);
+    for (const string_body of list_string_global_bodies) {
+      list_string_parts.push(string_body);
     }
     list_string_parts.push("");
   }
@@ -115,7 +159,6 @@ export function build_string_app_js_from_store_for_string_app_name(
     if (string_body) {
       list_string_parts.push(string_body, "");
     } else {
-      // Should never happen — log loudly if it does
       init_fn_debug_log_for_string_function_name("build_string_app_js_from_store_for_string_app_name:MISSING_BODY", {
         string_fn_name,
       });

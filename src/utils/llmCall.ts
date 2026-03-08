@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import {
   push_string_to_list_all_prompts_sent,
   push_string_to_list_all_llm_responses_received,
@@ -12,6 +13,41 @@ import {
   exit_fn_debug_log_for_string_function_name,
   error_fn_debug_log_for_string_function_name,
 } from "../debug/debugLogger";
+
+const bool_verbose_llm_log = process.env.LLM_VERBOSE === "true";
+
+export function get_string_stripped_markdown_fences_from_string_llm_output(
+  string_llm_output: string
+): string {
+  return string_llm_output
+    .replace(/^```[\w]*\n?/gm, "")
+    .replace(/^```$/gm, "")
+    .trim();
+}
+
+function log_string_llm_request(
+  string_log_key: string,
+  string_system_prompt: string,
+  string_user_prompt: string
+): void {
+  if (!bool_verbose_llm_log) return;
+  console.log(chalk.magenta(`\n${"─".repeat(60)}`));
+  console.log(chalk.magenta(`▶ LLM REQUEST ${string_log_key}`));
+  console.log(chalk.gray("SYSTEM:\n") + string_system_prompt);
+  console.log(chalk.gray("\nUSER:\n") + string_user_prompt);
+  console.log(chalk.magenta("─".repeat(60)));
+}
+
+function log_string_llm_response(
+  string_log_key: string,
+  string_llm_response: string
+): void {
+  if (!bool_verbose_llm_log) return;
+  console.log(chalk.green(`\n${"─".repeat(60)}`));
+  console.log(chalk.green(`◀ LLM RESPONSE ${string_log_key}`));
+  console.log(string_llm_response);
+  console.log(chalk.green("─".repeat(60)));
+}
 
 export async function call_string_llm_for_string_agent_with_string_model(
   string_agent_name: string,
@@ -31,6 +67,7 @@ export async function call_string_llm_for_string_agent_with_string_model(
   const string_log_key  = `[${string_provider}/${string_agent_name}/${string_model_name}]`;
 
   push_string_to_list_all_prompts_sent(`${string_log_key} ${string_system_prompt}\n${string_user_prompt}`);
+  log_string_llm_request(string_log_key, string_system_prompt, string_user_prompt);
 
   try {
     const response = await openai_client.chat.completions.create({
@@ -42,8 +79,10 @@ export async function call_string_llm_for_string_agent_with_string_model(
       ],
     });
 
-    const string_llm_response = response.choices[0]?.message?.content?.trim() ?? "";
+    const string_raw_response = response.choices[0]?.message?.content?.trim() ?? "";
+    const string_llm_response = get_string_stripped_markdown_fences_from_string_llm_output(string_raw_response);
 
+    log_string_llm_response(string_log_key, string_llm_response);
     push_string_to_list_all_llm_responses_received(string_llm_response);
     save_string_prompt_log_to_sqlite(
       string_agent_name,

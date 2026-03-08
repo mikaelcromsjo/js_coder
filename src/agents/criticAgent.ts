@@ -26,6 +26,11 @@ AUTHORITY ORDER (highest to lowest):
 2. FORMAL SPEC — defines what must exist and what must be output
 3. PLAN — defines intended structure; flag deviations unless spec overrides
 
+CRITIC RULES:
+never suggest renaming any function — names are set by the spec and are not your concern
+only flag: missing spec functions, broken logic, rule violations, runtime errors
+PASS if all spec functions are present and rules are satisfied as written
+
 ORIGINAL REQUIREMENT: ${string_original_requirement}
 FORMAL SPEC:
 ${string_formal_spec || "(no spec yet)"}

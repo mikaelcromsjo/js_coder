@@ -31,6 +31,7 @@ function create_embedding_openai_client(): OpenAI {
   return new OpenAI({
     apiKey:  dict_string_provider_to_string_key[string_provider]  ?? "",
     baseURL: dict_string_provider_to_string_url[string_provider] ?? "https://api.novita.ai/v3/openai",
+    logLevel: 'error',    
   });
 }
 

@@ -34,6 +34,22 @@ import {
   exit_fn_debug_log_for_string_function_name,
 } from "../debug/debugLogger";
 
+async function get_string_test_code_safe_for_string_js_code_and_string_js_path(
+  string_js_code: string,
+  string_js_path: string
+): Promise<string> {
+  try {
+    return await run_string_test_writer_agent_on_string_js_code_and_string_file_path(
+      string_js_code,
+      string_js_path
+    );
+  } catch (error: unknown) {
+    const string_error = error instanceof Error ? error.message : String(error);
+    console.warn(chalk.yellow(`  ⚠️  test_writer skipped: ${string_error}`));
+    return `// test_writer failed — skipped\nconsole.log('Tests skipped.');`;
+  }
+}
+
 export async function run_full_app_generation_pipeline_on_string_user_request(
   string_user_request: string,
   string_app_name:     string
@@ -73,9 +89,13 @@ export async function run_full_app_generation_pipeline_on_string_user_request(
   console.log(chalk.cyan("\n⚡ [4/8] SYNTAX CHECK"));
   if (!run_bool_syntax_check_on_string_js_file_path(string_js_path)) {
     console.log(chalk.red("  ❌ Syntax error — healing..."));
-    const string_fix_output = await run_string_refactor_agent_on_string_js_code_and_string_critique(string_js_code, "SYNTAX ERROR: fix all syntax errors");
+    const string_fix_output = await run_string_refactor_agent_on_string_js_code_and_string_critique(
+      string_js_code, "SYNTAX ERROR: fix all syntax errors"
+    );
     increment_int_current_revision_number();
-    const dict_fix = await apply_string_llm_output_and_rebuild_app_for_string_app_name(string_fix_output, string_current_app_name, int_current_revision_number, string_output_dir);
+    const dict_fix = await apply_string_llm_output_and_rebuild_app_for_string_app_name(
+      string_fix_output, string_current_app_name, int_current_revision_number, string_output_dir
+    );
     string_js_code = dict_fix.string_app_js;
     set_string_last_generated_js_code(string_js_code);
   }
@@ -84,30 +104,45 @@ export async function run_full_app_generation_pipeline_on_string_user_request(
   const string_critique = await run_string_critic_agent_on_string_js_code(string_js_code);
   if (string_critique.trim().toUpperCase() !== "PASS") {
     console.log(chalk.cyan("\n♻️  [6/8] REFACTOR → new.js + store + embed"));
-    const string_refactor_output = await run_string_refactor_agent_on_string_js_code_and_string_critique(string_js_code, string_critique);
+    const string_refactor_output = await run_string_refactor_agent_on_string_js_code_and_string_critique(
+      string_js_code, string_critique
+    );
     const int_from = int_current_revision_number;
     increment_int_current_revision_number();
-    const dict_refactor = await apply_string_llm_output_and_rebuild_app_for_string_app_name(string_refactor_output, string_current_app_name, int_current_revision_number, string_output_dir);
+    const dict_refactor = await apply_string_llm_output_and_rebuild_app_for_string_app_name(
+      string_refactor_output, string_current_app_name, int_current_revision_number, string_output_dir
+    );
     string_js_code = dict_refactor.string_app_js;
     set_string_last_generated_js_code(string_js_code);
     save_revision_to_sqlite_for_int_revision_number(int_current_revision_number, string_current_app_name, string_js_code, `Refactor: ${string_critique}`);
     save_refactor_log_to_sqlite_from_int_revision_to_int_revision(int_from, int_current_revision_number, string_critique);
     console.log(chalk.gray(`  Updated: ${dict_refactor.list_string_updated_names.join(", ")}`));
-  } else { console.log(chalk.green("  ✅ Critic: PASS")); }
+  } else {
+    console.log(chalk.green("  ✅ Critic: PASS"));
+  }
 
   console.log(chalk.cyan("\n🧪 [7/8] TEST WRITER + ACCUMULATE"));
-  const string_test_code = await run_string_test_writer_agent_on_string_js_code_and_string_file_path(string_js_code, string_js_path);
+  const string_test_code = await get_string_test_code_safe_for_string_js_code_and_string_js_path(
+    string_js_code,
+    string_js_path
+  );
   const list_string_new_asserts = extract_list_string_assert_lines_from_string_test_code(string_test_code);
   save_list_string_test_assertions_to_sqlite_for_string_app_name(string_current_app_name, list_string_new_asserts, int_current_revision_number);
   const list_string_all_asserts = load_list_string_all_test_assertions_from_sqlite_for_string_app_name(string_current_app_name);
-  const string_full_test = build_string_full_test_file_from_string_app_path_and_list_string_assertions(string_js_path, list_string_all_asserts);
+  const string_full_test = build_string_full_test_file_from_string_app_path_and_list_string_assertions(
+    string_js_path, list_string_all_asserts
+  );
   write_string_content_to_string_file_path(string_test_path, string_full_test);
 
   console.log(chalk.cyan("\n🏃 [8/8] TEST RUNNER"));
   run_bool_test_on_string_test_file_path(string_test_path);
   if (!bool_last_test_passed) {
-    string_js_code = await trigger_self_heal_loop_on_string_js_code_and_string_test_path(string_js_code, string_test_path);
-  } else { console.log(chalk.green("  ✅ Tests passed!")); }
+    string_js_code = await trigger_self_heal_loop_on_string_js_code_and_string_test_path(
+      string_js_code, string_test_path
+    );
+  } else {
+    console.log(chalk.green("  ✅ Tests passed!"));
+  }
 
   if (bool_last_test_passed) set_int_last_passing_revision_number(int_current_revision_number);
   console.log(chalk.bold.green(`\n🎉 DONE → ${string_js_path}`));

@@ -61,7 +61,7 @@ src/
 ├── debug/debugLogger.ts             init_fn / exit_fn / error_fn debug logger
 ├── utils/
 │   ├── prompts.ts                   string_prompt_all_conventions
-│   ├── promptsTester.ts             string_prompt_tester
+│   ├── promptTester.ts             string_prompt_tester
 │   ├── llmCall.ts                   Single LLM call (auto-logs all)
 │   ├── llmProviders.ts              Provider factory: novita/deepinfra/ollama/openai
 │   ├── fileWriter.ts                Write JS/test files to disk
